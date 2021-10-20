@@ -45,24 +45,68 @@ class Lazy
 		puts "@box_list size:" + @box_list.size.to_s
 	end
 
-	def solve_test
-		bags = product_list_not_use
-	    total_weight = 587
-	    kp = BoxTool.new(bags, total_weight)
-	    kp.solve
-	    puts " -------- 该背包问题实例的解: --------- "
-	    puts "最优值：#{kp.best_value}"
-	    puts "最优解【选取的背包】: "
-	    print kp.best_solutions, "\n"
-	    return 
-	    puts "最优值矩阵："
-	    best_values = kp.best_values
-	    best_values.each  do |r|
-	      r.each do |c|
-	        printf("%-5d", c) 
-	      end
-	      puts
-	    end
+	def solve_test show_info=false
+
+		success = 0 
+		faild = 0 
+		all = box_list_not_full.size
+		t1 = Time.now
+		success_info = ''
+		
+		box_list_not_full.each_with_index do |box, index|
+			# puts "box:#{box.name} 目标值:#{box.amount.round(2)}"
+			t3 = Time.now
+			total_weight = box.amount
+			info = get_select_product_by total_weight
+			bags = product_list_not_use.select{|a|a.selected == 1}
+		    kp = BoxTool.new(bags, total_weight)
+		    kp.solve
+		    t4 = Time.now
+			
+			if box.amount.to_f != kp.best_value.to_f
+				bags.each{|a| a.selected = 1}
+				# return 
+				faild += 1
+			else
+				# puts "                                不是最优解！不记录"
+				success += 1
+			end
+
+			puts "背包:%-2s cost:%-6ssec 目标值:%-8s 最优值:%-8s ALL:%-5s success:%-5s faild:%-5s info:%-10s" % 
+				[
+					index,
+					((t4-t3)/1000).to_f.round(2),
+					box.amount.round(2),
+					kp.best_value.round(2),
+					all,
+					success,
+					faild,
+					info
+				]
+
+
+		    puts "最优解【选取的背包】: " if show_info
+		    print kp.best_solutions, "\n" if show_info
+	        
+		    best_values = kp.best_values
+		    if show_info
+		    	puts "最优值矩阵："
+			    best_values.each  do |r|
+			      r.each do |c|
+			        printf("%-5d", c) 
+			      end
+			      puts
+			    end
+			end
+		    # 重置数据
+		    kp.best_solutions.each{|a| a.in_use = 1 }
+		    bags.each{|a| a.selected = 1}
+		    kp.best_solutions.each{|a| box.do_add a }
+		    
+		end
+
+		t2 = Time.now
+		puts "Success cost:#{t2-t1}"
 	end
 
 	def solve_1
@@ -89,7 +133,7 @@ class Lazy
 
 	def sort_list
 		@box_list.sort!{ |a,b| a.amount.to_f <=> b.amount.to_f}
-		@box_list.reverse!
+		# @box_list.reverse!
 
 		@product_list.sort!{ |a,b| a.price.to_f <=> b.price.to_f}
 		@product_list.reverse!
@@ -176,7 +220,28 @@ class Lazy
     	list[rand(list.size)]
     end
 
-    def get_product_by total
+    def get_select_product_by total
+    	step = 10
+    	sum = product_list_not_use.select{|a|a.selected == 1}.map(&:price).sum rescue 0
+    	while sum < total 
+	    	product_list_to_calc = []
+	    	# 分组
+	    	# [["22713025", 1500], ["20182038", 7550], ["20104252", 1], 
+	    	name_list = product_list_not_use.map(&:name).uniq
+	    	name_list.each do |name|
+	    		product_list_not_use.select{|a|a.name == name}.each_with_index do |b,index|
+	    			break if index >= step
+	    			b.selected = 1
+	    		end
+	    	end
+	    	step += 10
+	    	sum = product_list_not_use.select{|a|a.selected == 1}.map(&:price).sum rescue 0
+	    end
+	    select_list = product_list_not_use.select{|a|a.selected == 1}
+	    return "total:%-8s step:%-4s sum:%-8s selected count:%-6s" %
+	    		[
+	    			total.round(2),step.round(2),sum.round(2),select_list.size
+	    		]
     end
 
 end

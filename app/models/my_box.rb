@@ -22,6 +22,16 @@ class MyBox
         return true
     end
 
+    def do_add p
+        if @is_full == 1 || @amount < p.price + @amount_all
+            return 
+        end
+        @list << p
+        @amount_all = @amount_all.to_f + p.price.to_f
+        @is_full =  @amount.to_f == @amount_all.to_f ? 1 : 0
+        @diff = (@amount - @amount_all).round(2)
+        p.in_use = 1
+    end
 
     def check_full?
     	return @amount == @amount_all ? 1 : 0 
@@ -30,6 +40,8 @@ class MyBox
     def show
     	puts "#{@name} #{@amount.to_f.round(2)} full? #{check_full?} list size=#{@list.size} amount_all:#{@amount_all.round(2)} diff=#{@diff}"
     end
+
+
 
 
 end

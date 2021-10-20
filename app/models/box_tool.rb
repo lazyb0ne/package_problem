@@ -12,12 +12,12 @@ class BoxTool
   
   def solve
     t1 = Time.now
-    puts '给定背包:'
-    bags.each do |bag|
-      puts bag.to_s
-    end
+    # puts '给定背包:'
+    # bags.each do |bag|
+    #   puts bag.to_s
+    # end
     
-    puts '给定总称重: ' + @total_weight.to_s
+    # puts '给定总称重: ' + @total_weight.to_s
     
     (0..@total_weight).each do |j| 
       (0..@n).each do |i| 
@@ -47,6 +47,6 @@ class BoxTool
       @best_value = @best_values[@n][@total_weight]
     end  
     t2 = Time.now
-    puts "solve cost:#{t2-t1}"
+    # puts "solve cost:#{(t2-t1).round(2)} "
   end
 end

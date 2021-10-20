@@ -1,5 +1,5 @@
 class Product
-	attr_accessor :name, :price, :in_use, :weight, :value
+	attr_accessor :name, :price, :in_use, :weight, :value, :selected
 
 	def initialize
         @price = 0
