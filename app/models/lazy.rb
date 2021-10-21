@@ -52,9 +52,17 @@ class Lazy
 		all = box_list_not_full.size
 		t1 = Time.now
 		success_info = ''
-		
-		box_list_not_full.each_with_index do |box, index|
-			# puts "box:#{box.name} 目标值:#{box.amount.round(2)}"
+		idx = 0
+		count_hash = {}
+		box_list_not_full.each do |a|
+			count_hash[a.name] = 0
+		end
+		is_success = 0
+
+		while box_list_not_full.size >0
+			box = box_random
+
+			count_hash[box.name] = count_hash[box.name] + 1
 			t3 = Time.now
 			total_weight = box.amount
 			info = get_select_product_by total_weight
@@ -62,26 +70,35 @@ class Lazy
 		    kp = BoxTool.new(bags, total_weight)
 		    kp.solve
 		    t4 = Time.now
+		    idx = idx + 1
+
+		    is_success = (box.amount.to_f.round(2) == kp.best_value.to_f.round(2)) ? 1:0
 			
-			if box.amount.to_f != kp.best_value.to_f
+			if is_success == 1
+				bags.each{|a| a.selected = 0}
+				success += 1
+				success_info = "OK"
+			else
 				bags.each{|a| a.selected = 1}
 				# return 
 				faild += 1
-			else
-				# puts "                                不是最优解！不记录"
-				success += 1
+				success_info = "X"
 			end
 
-			puts "背包:%-2s cost:%-6ssec 目标值:%-8s 最优值:%-8s ALL:%-5s success:%-5s faild:%-5s info:%-10s" % 
+			puts "%-3s 背包:%-6s try:%-3s cost:%-6s cost all:%-6s 目标值:%-8s 最优值:%-8s ALL:%-5s success:%-5s faild:%-5s info:%-10s %-3s" % 
 				[
-					index,
-					((t4-t3)/1000).to_f.round(2),
+					idx,
+					box.name,
+					count_hash[box.name],
+					(t4-t3).to_f.round(2),
+					(Time.now-t1).to_f.round(2),
 					box.amount.round(2),
 					kp.best_value.round(2),
 					all,
 					success,
 					faild,
-					info
+					info,
+					success_info
 				]
 
 
@@ -99,17 +116,16 @@ class Lazy
 			    end
 			end
 		    # 重置数据
-		    kp.best_solutions.each{|a| a.in_use = 1 }
-		    bags.each{|a| a.selected = 1}
-		    kp.best_solutions.each{|a| box.do_add a }
-		    
+		    if is_success
+				kp.best_solutions.each{|a| a.in_use = 1 }
+			    bags.each{|a| a.selected = 1}
+			    kp.best_solutions.each{|a| box.do_add a }
+			    box.is_full = 1
+			end
 		end
-
-		t2 = Time.now
-		puts "Success cost:#{t2-t1}"
 	end
 
-	def solve_1
+	def solve_demo
 		bags = [KnapSack.new(2, 2), KnapSack.new(10, 10), KnapSack.new(3, 3), KnapSack.new(2, 2), 
             KnapSack.new(4, 4), KnapSack.new(5, 5), KnapSack.new(20, 20), KnapSack.new(8, 8)]
 	    total_weight = 20
@@ -216,7 +232,8 @@ class Lazy
     end
 
     def box_random
-    	list = box_list_not_full
+    	list = box_list_not_full.first(10)
+    	# list = @box_list.first(3)
     	list[rand(list.size)]
     end
 
@@ -230,8 +247,8 @@ class Lazy
 	    	name_list = product_list_not_use.map(&:name).uniq
 	    	name_list.each do |name|
 	    		product_list_not_use.select{|a|a.name == name}.each_with_index do |b,index|
-	    			break if index >= step
 	    			b.selected = 1
+	    			break if index >= step
 	    		end
 	    	end
 	    	step += 10

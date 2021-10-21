@@ -28,7 +28,7 @@ class MyBox
         end
         @list << p
         @amount_all = @amount_all.to_f + p.price.to_f
-        @is_full =  @amount.to_f == @amount_all.to_f ? 1 : 0
+        @is_full =  @amount.to_f.round(2) == @amount_all.to_f.round(2) ? 1 : 0
         @diff = (@amount - @amount_all).round(2)
         p.in_use = 1
     end
