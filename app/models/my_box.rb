@@ -23,7 +23,7 @@ class MyBox
     end
 
     def do_add p
-        if @is_full == 1 || @amount < p.price + @amount_all
+        if p.in_use == 1 || @is_full == 1 || @amount < p.price + @amount_all
             return 
         end
         @list << p
