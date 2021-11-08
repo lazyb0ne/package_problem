@@ -51,24 +51,32 @@ class Lazy
 
 		# 无脑处理背包
 		pre_deal
+
+		@box_list.map(&:amount)
+	end
+
+	# 产品合并
+	def sum
 	end
 
 	def pre_deal
 		old_len = @product_list.size
-		list = product_count_hash.sort{|a,b|a[:amount].to_f <=> b[:amount].to_f}.last(6)
+		# list = product_count_hash.sort{|a,b|a[:amount].to_f <=> b[:amount].to_f}.last(30)
+		list = @product_list.select{|b|b.value.to_i == b.value.to_f}.sort{|a,b|a.value.to_f <=> b.value.to_f}.last(30)
 		list.each do |a|
 			step = 0
-			p_to_del = product_list_not_use.select{|b|b.name == a[:name].to_s}
+			p_to_del = product_list_not_use.select{|b|b.name == a.name.to_s}
 			# 某类商品最大值
-			amount = p_to_del.size * 0.5
+			amount = p_to_del.size
 			puts "pre_deal ------ amount:#{amount.round(2)}"
 			# 删除掉 amount个商品
-			while step < amount - 200 
+			while step < amount - 500
 				step+=1
 				# 提前装进仓库
-				pre_to_box p_to_del[step] 
-				# 删掉一半的商品
-				@product_list.delete(p_to_del[step])
+				if pre_to_box p_to_del[step] 
+					# 删掉一半的商品
+					@product_list.delete(p_to_del[step])
+				end
 			end
 		end
 
@@ -83,8 +91,15 @@ class Lazy
 	# 提前装进仓库
 	def pre_to_box p
 		tmp_box = box_random_big
-		tmp_box.amount = tmp_box.amount - p.weight
-		pre_logs << [tmp_box.name, p.name]
+		tmp = tmp_box.amount
+		if tmp_box.amount.round(2) - p.price.round(2) >=0
+			tmp_box.amount = tmp_box.amount.round(2) - p.price.round(2)
+			puts "pre_to_box-#{tmp_box.name}-------#{tmp_box.amount} --- old:#{tmp.round(2)}"
+			pre_logs << [tmp_box.name, p.name]
+			return true
+		else
+			return false
+		end
 	end
 
 	def solve show_info=false
@@ -352,9 +367,16 @@ class Lazy
     end
 
     def box_random
-    	box_list.sort!{ |a,b| a.amount.to_f <=> b.amount.to_f}
-    	list = box_list_not_full.first(10)
-    	list[rand(list.size)]
+    	a = true	
+    	tmp_boxes = box_list.select{|b|b.amount.to_i != b.amount.to_f}
+    	if tmp_boxes && a
+	    	list = tmp_boxes.first(1)
+	    	list[rand(list.size)]
+	    else
+	    	box_list.sort!{ |a,b| a.amount.to_f <=> b.amount.to_f}
+	    	list = box_list_not_full.first(10)
+	    	list[rand(list.size)]
+	    end
     end
 
     def box_random_big
