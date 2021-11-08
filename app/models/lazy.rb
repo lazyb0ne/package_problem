@@ -50,7 +50,7 @@ class Lazy
 		puts "@box_list size:" + @box_list.size.to_s
 
 		# 无脑处理背包
-		pre_deal
+		# pre_deal
 
 		@box_list.map(&:amount)
 	end
@@ -65,12 +65,13 @@ class Lazy
 		list = @product_list.select{|b|b.value.to_i == b.value.to_f}.sort{|a,b|a.value.to_f <=> b.value.to_f}.last(30)
 		list.each do |a|
 			step = 0
-			p_to_del = product_list_not_use.select{|b|b.name == a.name.to_s}
+			# p_to_del = product_list_not_use.select{|b|b.name == a.name.to_s}
+			p_to_del = product_list_not_use
 			# 某类商品最大值
 			amount = p_to_del.size
 			puts "pre_deal ------ amount:#{amount.round(2)}"
 			# 删除掉 amount个商品
-			while step < amount - 500
+			while step < amount - 400
 				step+=1
 				# 提前装进仓库
 				if pre_to_box p_to_del[step] 
@@ -367,10 +368,10 @@ class Lazy
     end
 
     def box_random
-    	a = true	
+    	a = false	
     	tmp_boxes = box_list.select{|b|b.amount.to_i != b.amount.to_f}
     	if tmp_boxes && a
-	    	list = tmp_boxes.first(1)
+	    	list = tmp_boxes.first(10)
 	    	list[rand(list.size)]
 	    else
 	    	box_list.sort!{ |a,b| a.amount.to_f <=> b.amount.to_f}
