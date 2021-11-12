@@ -8,15 +8,14 @@ class BoxTool
     @n = bags.length
     @best_values = Array.new(@n + 1) { Array.new(@total_weight + 1) } 
     @best_solutions = Array.new
+
+    # @bags.map{|a|a.price = a.price*100.to_i}
+    # @total_weight = total_weight * 100
   end
   
   def solve
     t1 = Time.now
-    # puts '给定背包:'
-    # bags.each do |bag|
-    #   puts bag.to_s
-    # end
-    
+    # puts "商品列表:#{@bags.map{|a|a.price.to_i}}"
     # puts '给定总称重: ' + @total_weight.to_s
     
     (0..@total_weight).each do |j| 

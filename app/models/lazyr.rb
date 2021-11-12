@@ -1,6 +1,6 @@
 require 'simple_xlsx_reader'
 
-class Lazy
+class Lazyr
 
 	attr_accessor :product_list, :box_list, :product_count_hash, :pre_logs
 
@@ -49,29 +49,37 @@ class Lazy
 		puts "@product_list size:" + @product_list.size.to_s
 		puts "@box_list size:" + @box_list.size.to_s
 
-		# 无脑处理背包
-		# pre_deal
+		# @box_list.map(&:amount)
 
-		@box_list.map(&:amount)
+		pre_deal
 	end
 
-	# 产品合并
+	# 产品合并：
+	# 价格是整数，并且数量大于1000
 	def sum
+
+	end
+
+	def info
+		puts "box_list sum:#{@box_list.map{|a|a.amount.round(2)}.sum}"
+		puts @box_list.map{|a|a.amount.round(2)}
+
+		puts "product_list sum:#{@product_list.map{|a|a.value.round(2)}.sum}"
+		puts @product_list.map{|a|a.value.round(2)}
 	end
 
 	def pre_deal
 		old_len = @product_list.size
-		# list = product_count_hash.sort{|a,b|a[:amount].to_f <=> b[:amount].to_f}.last(30)
-		list = @product_list.select{|b|b.value.to_i == b.value.to_f}.sort{|a,b|a.value.to_f <=> b.value.to_f}.last(30)
+		list = @product_list.select{|b|b.value.to_i == b.value.to_f}.sort{|a,b|a.value.to_f <=> b.value.to_f}.last(300)
+		# list = @product_list.select{|b|b.value.to_i == b.value.to_f}.sort{|a,b|a.value.to_f <=> b.value.to_f}
 		list.each do |a|
 			step = 0
-			# p_to_del = product_list_not_use.select{|b|b.name == a.name.to_s}
 			p_to_del = product_list_not_use
 			# 某类商品最大值
 			amount = p_to_del.size
 			puts "pre_deal ------ amount:#{amount.round(2)}"
-			# 删除掉 amount个商品
-			while step < amount - 400
+			# 保留400个
+			while step < amount - 2000
 				step+=1
 				# 提前装进仓库
 				if pre_to_box p_to_del[step] 
@@ -91,9 +99,12 @@ class Lazy
 
 	# 提前装进仓库
 	def pre_to_box p
-		tmp_box = box_random_big
+		tmp_box = box_random_big p.price
+		tmp_box = box_random_big if tmp_box.nil?
+		tmp_box = box_random_big if tmp_box.nil?
+		return if tmp_box.nil?
 		tmp = tmp_box.amount
-		if tmp_box.amount.round(2) - p.price.round(2) >=0
+		if tmp_box.amount.round(2) - p.price.round(2) >=10000
 			tmp_box.amount = tmp_box.amount.round(2) - p.price.round(2)
 			puts "pre_to_box-#{tmp_box.name}-------#{tmp_box.amount} --- old:#{tmp.round(2)}"
 			pre_logs << [tmp_box.name, p.name]
@@ -179,7 +190,7 @@ class Lazy
 			else
 			end
 
-			break;
+		
 		end
 	end
 
@@ -370,10 +381,10 @@ class Lazy
     end
 
     def box_random
-    	a = true	
+    	a = false	
     	tmp_boxes = box_list.select{|b|b.amount.to_i != b.amount.to_f}
     	if tmp_boxes && a
-	    	list = tmp_boxes.first(1)
+	    	list = tmp_boxes.first(10)
 	    	list[rand(list.size)]
 	    else
 	    	box_list.sort!{ |a,b| a.amount.to_f <=> b.amount.to_f}
@@ -382,9 +393,12 @@ class Lazy
 	    end
     end
 
-    def box_random_big
+    def box_random_big p=nil
     	box_list.sort!{ |a,b| a.amount.to_f <=> b.amount.to_f}
-    	list = box_list_not_full.last(3)
+    	list = box_list_not_full.select{|a|a.amount.to_f == a.amount.to_i||a.amount > 100}.last(10)
+    	if list.blank? && p.present?
+    		list = box_list_not_full.select{a.amount > p}.last(10)
+    	end
     	list[rand(list.size)]
     end
 
